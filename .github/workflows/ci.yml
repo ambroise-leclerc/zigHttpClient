@@ -33,7 +33,13 @@ jobs:
         run: zig build
 
       - name: Run tests
-        run: zig build test
+        run: zig build test | tee test-results.txt
+      
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ matrix.os }}
+          path: test-results.txt
 
       - name: Run example
         run: zig build run
