@@ -1,0 +1,11 @@
+# Binary output
+zig-cache/
+zig-out/
+*.exe
+*.o
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+
