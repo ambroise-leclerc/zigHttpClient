@@ -1,5 +1,11 @@
 # Zig HTTP Client
 
+Ubuntu[![Ubuntu CI Status](https://github.com/ambroise-leclerc/zigHttpClient/actions/workflows/ci.yml/badge.svg?branch=master&event=push&job=build-and-test&os=ubuntu-latest)](https://github.com/ambroise-leclerc/zigHttpClient/actions/workflows/ci.yml) - 
+Windows[![Windows CI Status](https://github.com/ambroise-leclerc/zigHttpClient/actions/workflows/ci.yml/badge.svg?branch=master&event=push&job=build-and-test&os=windows-latest)](https://github.com/ambroise-leclerc/zigHttpClient/actions/workflows/ci.yml) - 
+MacOS[![macOS CI Status](https://github.com/ambroise-leclerc/zigHttpClient/actions/workflows/ci.yml/badge.svg?branch=master&event=push&job=build-and-test&os=macos-latest)](https://github.com/ambroise-leclerc/zigHttpClient/actions/workflows/ci.yml)
+
+
+
 A lightweight, dependency-free HTTP client implementation in Zig. This library provides a simple way to make HTTP requests with minimal overhead.
 
 ## Features
