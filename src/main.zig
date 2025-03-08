@@ -1,6 +1,5 @@
 const std = @import("std");
 const HttpClient = @import("http_client.zig").HttpClient;
-
 pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer _ = gpa.deinit();
