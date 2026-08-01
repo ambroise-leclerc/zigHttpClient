@@ -196,7 +196,7 @@ The library defines several error types in the `HttpError` enumeration to provid
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on building, testing, and formatting.
 
 ## License
 
