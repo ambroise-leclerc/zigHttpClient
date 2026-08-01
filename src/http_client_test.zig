@@ -14,3 +14,17 @@ test "HttpClient timeout initialization preserves the configured value" {
 test "GET remains the public HTTP method" {
     try std.testing.expectEqualStrings("GET", @tagName(client.HttpMethod.GET));
 }
+
+test "HttpClient returns ConnectionFailed on closed port" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const allocator = arena.allocator();
+    var client = client.HttpClient.init(allocator);
+
+    const result = client.get("127.0.0.1", "/", null);
+    if (result) |_| {
+        try std.testing.expect(false);
+    } else |err| {
+        try std.testing.expectEqual(client.HttpError.ConnectionFailed, err);
+    }
+}
