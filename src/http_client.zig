@@ -69,6 +69,14 @@ pub const ProxyConfig = struct {
     password: ?[]const u8 = null,
 };
 
+/// Configuration for an optional HTTP proxy
+pub const ProxyConfig = struct {
+    host: []const u8,
+    port: u16,
+    username: ?[]const u8 = null,
+    password: ?[]const u8 = null,
+};
+
 /// HTTP client for making requests to HTTP servers
 pub const HttpClient = struct {
     allocator: Allocator,

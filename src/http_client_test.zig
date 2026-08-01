@@ -113,3 +113,27 @@ test "HttpClient defaults proxy to null" {
     const http_client = client.HttpClient.init(std.testing.allocator);
     try std.testing.expectEqual(null, http_client.proxy);
 }
+
+test "ProxyConfig initializes with default values" {
+    const proxy = client.ProxyConfig{
+        .host = "proxy.example.com",
+        .port = 8080,
+    };
+    try std.testing.expectEqualStrings("proxy.example.com", proxy.host);
+    try std.testing.expectEqual(@as(u16, 8080), proxy.port);
+    try std.testing.expectEqual(null, proxy.username);
+    try std.testing.expectEqual(null, proxy.password);
+}
+
+test "ProxyConfig initializes with all fields" {
+    const proxy = client.ProxyConfig{
+        .host = "secure-proxy.example.com",
+        .port = 443,
+        .username = "user",
+        .password = "pass",
+    };
+    try std.testing.expectEqualStrings("secure-proxy.example.com", proxy.host);
+    try std.testing.expectEqual(@as(u16, 443), proxy.port);
+    try std.testing.expectEqualStrings("user", proxy.username.?);
+    try std.testing.expectEqualStrings("pass", proxy.password.?);
+}
