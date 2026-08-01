@@ -119,7 +119,7 @@ pub const HttpClient = struct {
         // using non-blocking IO or other means
 
         // Build and send the request
-        try self.writeRequest(&stream, method, host, path, headers);
+        try self.writeRequest(&stream, method, host, port, path, headers, null);
 
         // Process the response
         return try self.parseResponse(&stream);
@@ -130,15 +130,31 @@ pub const HttpClient = struct {
         allocator: Allocator,
         method: HttpMethod,
         host: []const u8,
+        port: u16,
         path: []const u8,
         headers: ?std.StringHashMap([]const u8),
+        proxy_url: ?[]const u8,
     ) ![]u8 {
         var buffer = std.ArrayList(u8).init(allocator);
         errdefer buffer.deinit();
 
         try buffer.appendSlice(@tagName(method));
         try buffer.appendSlice(" ");
-        try buffer.appendSlice(path);
+
+        if (proxy_url) |_| {
+            // Use absolute-form for proxy requests
+            try buffer.appendSlice("http://");
+            try buffer.appendSlice(host);
+            try buffer.appendSlice(":");
+            var port_buf: [6]u8 = undefined;
+            const port_str = std.fmt.bufPrint(&port_buf, "{d}", port) catch unreachable;
+            try buffer.appendSlice(port_str);
+            try buffer.appendSlice("/");
+            try buffer.appendSlice(path);
+        } else {
+            try buffer.appendSlice(path);
+        }
+
         try buffer.appendSlice(" HTTP/1.1\r\n");
 
         try buffer.appendSlice("Host: ");
@@ -167,10 +183,12 @@ pub const HttpClient = struct {
         stream: *net.Stream,
         method: HttpMethod,
         host: []const u8,
+        port: u16,
         path: []const u8,
         headers: ?std.StringHashMap([]const u8),
+        proxy_url: ?[]const u8,
     ) !void {
-        const request_bytes = try serializeRequest(self.allocator, method, host, path, headers);
+        const request_bytes = try serializeRequest(self.allocator, method, host, port, path, headers, proxy_url);
         defer self.allocator.free(request_bytes);
 
         _ = stream.write(request_bytes) catch {

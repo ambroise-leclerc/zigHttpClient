@@ -17,7 +17,7 @@ test "GET remains the public HTTP method" {
 
 test "serializeRequest produces correct GET request bytes" {
     const allocator = std.testing.allocator;
-    const result = try client.HttpClient.serializeRequest(allocator, .GET, "example.com", "/index.html", null);
+    const result = try client.HttpClient.serializeRequest(allocator, .GET, "example.com", 80, "/index.html", null, null);
     defer allocator.free(result);
 
     const expected = "GET /index.html HTTP/1.1\r\nHost: example.com\r\nConnection: close\r\n\r\n";
@@ -30,7 +30,7 @@ test "serializeRequest includes custom headers" {
     defer headers.deinit();
     try headers.put("User-Agent", "TestClient/1.0");
 
-    const result = try client.HttpClient.serializeRequest(allocator, .GET, "api.example.com", "/v1/data", headers);
+    const result = try client.HttpClient.serializeRequest(allocator, .GET, "api.example.com", 80, "/v1/data", headers, null);
     defer allocator.free(result);
 
     const expected = "GET /v1/data HTTP/1.1\r\nHost: api.example.com\r\nUser-Agent: TestClient/1.0\r\nConnection: close\r\n\r\n";
@@ -67,6 +67,15 @@ test "HttpResponse.getHeader returns value for case-insensitive match" {
 
     const value = response.getHeader("content-type");
     try std.testing.expectEqualStrings("application/json", value.?);
+}
+
+test "serializeRequest uses absolute-form for proxy requests" {
+    const allocator = std.testing.allocator;
+    const result = try client.HttpClient.serializeRequest(allocator, .GET, "example.com", 80, "/index.html", null, "http://proxy.example.com:8080");
+    defer allocator.free(result);
+
+    const expected = "GET http://example.com:80/index.html HTTP/1.1\r\nHost: example.com\r\nConnection: close\r\n\r\n";
+    try std.testing.expectEqualStrings(expected, result);
 }
 
 test "HttpResponse.getHeader returns null for missing header" {
