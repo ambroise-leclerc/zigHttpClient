@@ -61,24 +61,45 @@ pub const HttpResponse = struct {
     }
 };
 
+/// Parse a proxy URL into host and port
+fn parseProxyUrl(url: []const u8) !struct { host: []const u8, port: u16 } {
+    const prefix = "http://";
+    if (!mem.startsWith(u8, url, prefix)) return HttpError.ProtocolError;
+    const rest = url[prefix.len..];
+    const colon_idx = mem.indexOf(u8, rest, ":");
+    var host: []const u8;
+    var port: u16 = 8080;
+    if (colon_idx) |idx| {
+        host = rest[0..idx];
+        const port_str = rest[idx + 1 ..];
+        port = std.fmt.parseInt(u16, port_str, 10) catch return HttpError.ProtocolError;
+    } else {
+        host = rest;
+    }
+    return .{ .host = host, .port = port };
+}
+
 /// HTTP client for making requests to HTTP servers
 pub const HttpClient = struct {
     allocator: Allocator,
     timeout_ms: ?u32, // Optional timeout in milliseconds
+    proxy_url: ?[]const u8,
 
     /// Initialize a new HTTP client with the given allocator
-    pub fn init(allocator: Allocator) HttpClient {
+    pub fn init(allocator: Allocator, proxy_url: ?[]const u8) HttpClient {
         return .{
             .allocator = allocator,
             .timeout_ms = null,
+            .proxy_url = proxy_url,
         };
     }
 
     /// Initialize a new HTTP client with timeout
-    pub fn initWithTimeout(allocator: Allocator, timeout_ms: u32) HttpClient {
+    pub fn initWithTimeout(allocator: Allocator, timeout_ms: u32, proxy_url: ?[]const u8) HttpClient {
         return .{
             .allocator = allocator,
             .timeout_ms = timeout_ms,
+            .proxy_url = proxy_url,
         };
     }
 
@@ -100,11 +121,17 @@ pub const HttpClient = struct {
         path: []const u8,
         headers: ?std.StringHashMap([]const u8),
     ) !HttpResponse {
-        // Default port is 80 for HTTP
-        const port: u16 = 80;
+        var connect_host: []const u8 = host;
+        var connect_port: u16 = 80;
 
-        // Connect to the server
-        var stream = net.tcpConnectToHost(self.allocator, host, port) catch |err| {
+        if (self.proxy_url) |proxy| {
+            const parsed = try parseProxyUrl(proxy);
+            connect_host = parsed.host;
+            connect_port = parsed.port;
+        }
+
+        // Connect to the server (or proxy)
+        var stream = net.tcpConnectToHost(self.allocator, connect_host, connect_port) catch |err| {
             switch (err) {
                 error.ConnectionRefused => return HttpError.ConnectionFailed,
                 error.UnknownHostName, error.NameServerFailure, error.TemporaryNameServerFailure => return HttpError.AddressLookupFailure,
@@ -119,7 +146,7 @@ pub const HttpClient = struct {
         // using non-blocking IO or other means
 
         // Build and send the request
-        try self.writeRequest(&stream, method, host, port, path, headers, null);
+        try self.writeRequest(&stream, method, host, connect_port, path, headers, self.proxy_url);
 
         // Process the response
         return try self.parseResponse(&stream);
