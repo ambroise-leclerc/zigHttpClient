@@ -189,10 +189,12 @@ The library defines several error types in the `HttpError` enumeration to provid
 
 ## Limitations
 
-- Currently only supports HTTP (not HTTPS)
+- Plain HTTP only (HTTPS/TLS is not supported)
 - Only implements the GET method (POST, PUT, etc. can be added)
 - Does not follow redirects automatically
 - Timeout functionality is declared but not fully implemented
+- Supports simple HTTP proxying via standard proxy headers
+- Does not support TLS/SSL, the `CONNECT` method, authentication (e.g., Basic, Bearer), or SOCKS proxies
 
 ## Contributing
 
