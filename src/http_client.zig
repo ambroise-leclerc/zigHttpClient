@@ -61,16 +61,26 @@ pub const HttpResponse = struct {
     }
 };
 
+/// Configuration for an optional HTTP proxy
+pub const ProxyConfig = struct {
+    host: []const u8,
+    port: u16,
+    username: ?[]const u8 = null,
+    password: ?[]const u8 = null,
+};
+
 /// HTTP client for making requests to HTTP servers
 pub const HttpClient = struct {
     allocator: Allocator,
     timeout_ms: ?u32, // Optional timeout in milliseconds
+    proxy: ?ProxyConfig = null,
 
     /// Initialize a new HTTP client with the given allocator
     pub fn init(allocator: Allocator) HttpClient {
         return .{
             .allocator = allocator,
             .timeout_ms = null,
+            .proxy = null,
         };
     }
 
@@ -79,6 +89,7 @@ pub const HttpClient = struct {
         return .{
             .allocator = allocator,
             .timeout_ms = timeout_ms,
+            .proxy = null,
         };
     }
 
