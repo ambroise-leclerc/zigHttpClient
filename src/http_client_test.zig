@@ -24,5 +24,5 @@ test "GET rejects path not starting with /" {
 }
 
 test "GET remains the public HTTP method" {
-    try std.testing.expect(std.meta.hasDecl(client.HttpClient, "get"));
+    try std.testing.expect(@hasDecl(client.HttpClient, "get"));
 }
