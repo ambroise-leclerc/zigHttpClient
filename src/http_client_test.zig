@@ -95,8 +95,8 @@ test "HttpResponse.getHeader returns null for missing header" {
 }
 
 test "HttpClient proxy transport uses proxy host for connection" {
-    var client = client.HttpClient.init(std.testing.allocator, "http://127.0.0.1:9999");
-    const result = client.get("example.com", "/", null);
+    var http_client = client.HttpClient.init(std.testing.allocator, "http://127.0.0.1:9999");
+    const result = http_client.get("example.com", "/", null);
     if (result) |_| {
         try std.testing.expect(false);
     } else |err| {
