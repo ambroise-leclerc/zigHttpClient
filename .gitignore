@@ -1,0 +1,7 @@
+# Zig build cache and output
+zig-cache/
+zig-out/
+
+# Compiled binaries
+*.exe
+*.o
