@@ -29,10 +29,10 @@ You can include this library in your Zig project in several ways:
 
 ```bash
 # Add as a submodule to your project
-git submodule add https://github.com/yourusername/zig-http-client.git lib/http-client
+git submodule add https://github.com/ambroise-leclerc/zigHttpClient.git lib/http-client
 
 # Then in your build.zig:
-exe.addPackagePath("http-client", "lib/http-client/http_client.zig");
+exe.addPackagePath("http-client", "lib/http-client/src/http_client.zig");
 ```
 
 ### Option 2: Copy Files
