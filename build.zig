@@ -42,4 +42,15 @@ pub fn build(b: *std.Build) void {
 
     const test_step = b.step("test", "Run tests");
     test_step.dependOn(&b.addRunArtifact(tests).step);
+
+    // Les tests externes restent disponibles explicitement, mais ne font pas partie de
+    // l'oracle déterministe exécuté sur chaque contribution.
+    const network_tests = b.addTest(.{
+        .root_source_file = b.path("src/http_client_network_test.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+    network_tests.root_module.addImport("http-client", http_client_module);
+    const network_test_step = b.step("test-network", "Run external network tests");
+    network_test_step.dependOn(&b.addRunArtifact(network_tests).step);
 }

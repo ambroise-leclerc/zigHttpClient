@@ -34,7 +34,3 @@ jobs:
 
       - name: Run tests
         run: zig build test | tee test-results.txt
-      
-      - name: Run example
-        run: zig build run
-        continue-on-error: true  # Won't fail the workflow if network requests fail
