@@ -67,7 +67,7 @@ fn parseProxyUrl(url: []const u8) !struct { host: []const u8, port: u16 } {
     if (!mem.startsWith(u8, url, prefix)) return HttpError.ProtocolError;
     const rest = url[prefix.len..];
     const colon_idx = mem.indexOf(u8, rest, ":");
-    var host: []const u8;
+    var host: []const u8 = undefined;
     var port: u16 = 8080;
     if (colon_idx) |idx| {
         host = rest[0..idx];
