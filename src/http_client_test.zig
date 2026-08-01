@@ -36,3 +36,51 @@ test "serializeRequest includes custom headers" {
     const expected = "GET /v1/data HTTP/1.1\r\nHost: api.example.com\r\nUser-Agent: TestClient/1.0\r\nConnection: close\r\n\r\n";
     try std.testing.expectEqualStrings(expected, result);
 }
+
+test "HttpResponse.getHeader returns value for exact case match" {
+    var headers = std.StringHashMap([]const u8).init(std.testing.allocator);
+    defer headers.deinit();
+    try headers.put("Content-Type", "application/json");
+
+    const response = client.HttpResponse{
+        .status_code = 200,
+        .headers = headers,
+        .body = "",
+        .allocator = std.testing.allocator,
+    };
+
+    const value = response.getHeader("Content-Type");
+    try std.testing.expectEqualStrings("application/json", value.?);
+}
+
+test "HttpResponse.getHeader returns value for case-insensitive match" {
+    var headers = std.StringHashMap([]const u8).init(std.testing.allocator);
+    defer headers.deinit();
+    try headers.put("Content-Type", "application/json");
+
+    const response = client.HttpResponse{
+        .status_code = 200,
+        .headers = headers,
+        .body = "",
+        .allocator = std.testing.allocator,
+    };
+
+    const value = response.getHeader("content-type");
+    try std.testing.expectEqualStrings("application/json", value.?);
+}
+
+test "HttpResponse.getHeader returns null for missing header" {
+    var headers = std.StringHashMap([]const u8).init(std.testing.allocator);
+    defer headers.deinit();
+    try headers.put("Content-Type", "application/json");
+
+    const response = client.HttpResponse{
+        .status_code = 200,
+        .headers = headers,
+        .body = "",
+        .allocator = std.testing.allocator,
+    };
+
+    const value = response.getHeader("X-Missing-Header");
+    try std.testing.expectEqual(null, value);
+}

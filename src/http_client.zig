@@ -48,6 +48,17 @@ pub const HttpResponse = struct {
         // Free the body
         self.allocator.free(self.body);
     }
+
+    /// Get a header value case-insensitively
+    pub fn getHeader(self: *const HttpResponse, name: []const u8) ?[]const u8 {
+        var it = self.headers.iterator();
+        while (it.next()) |entry| {
+            if (std.ascii.eqlIgnoreCase(entry.key_ptr.*, name)) {
+                return entry.value_ptr.*;
+            }
+        }
+        return null;
+    }
 };
 
 /// HTTP client for making requests to HTTP servers
