@@ -73,7 +73,7 @@ pub const HttpClient = struct {
     }
 
     /// Validate that a string does not contain CR or LF characters
-    fn validateNoCrLf(self: *const HttpClient, input: []const u8) !void {
+    fn validateNoCrLf(_: *const HttpClient, input: []const u8) !void {
         for (input) |char| {
             if (char == '\r' or char == '\n') {
                 return HttpError.RequestSplittingAttempt;
