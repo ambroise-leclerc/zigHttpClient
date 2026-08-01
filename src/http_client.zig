@@ -17,6 +17,7 @@ pub const HttpError = error{
     AddressLookupFailure,
     ProtocolError,
     ChunkedEncodingError,
+    RequestSplittingAttempt,
 };
 
 /// Supported HTTP methods
@@ -71,6 +72,15 @@ pub const HttpClient = struct {
         };
     }
 
+    /// Validate that a string does not contain CR or LF characters
+    fn validateNoCrLf(input: []const u8) !void {
+        for (input) |char| {
+            if (char == '\r' or char == '\n') {
+                return HttpError.RequestSplittingAttempt;
+            }
+        }
+    }
+
     /// Send a GET request to the specified host and path
     pub fn get(
         self: *HttpClient,
@@ -89,6 +99,17 @@ pub const HttpClient = struct {
         path: []const u8,
         headers: ?std.StringHashMap([]const u8),
     ) !HttpResponse {
+        // Validate inputs to prevent HTTP request splitting
+        try self.validateNoCrLf(host);
+        try self.validateNoCrLf(path);
+        if (headers) |h| {
+            var it = h.iterator();
+            while (it.next()) |entry| {
+                try self.validateNoCrLf(entry.key_ptr.*);
+                try self.validateNoCrLf(entry.value_ptr.*);
+            }
+        }
+
         // Default port is 80 for HTTP
         const port: u16 = 80;
 

@@ -14,3 +14,63 @@ test "HttpClient timeout initialization preserves the configured value" {
 test "GET remains the public HTTP method" {
     try std.testing.expectEqualStrings("GET", @tagName(client.HttpMethod.GET));
 }
+
+test "Reject CR in host" {
+    var client = client.HttpClient.init(std.testing.allocator);
+    const result = (&client).sendRequest(.GET, "host\r\nInjected: true", "/path", null);
+    try std.testing.expectError(client.HttpError.RequestSplittingAttempt, result);
+}
+
+test "Reject LF in host" {
+    var client = client.HttpClient.init(std.testing.allocator);
+    const result = (&client).sendRequest(.GET, "host\nInjected: true", "/path", null);
+    try std.testing.expectError(client.HttpError.RequestSplittingAttempt, result);
+}
+
+test "Reject CR in path" {
+    var client = client.HttpClient.init(std.testing.allocator);
+    const result = (&client).sendRequest(.GET, "host", "/path\r\nInjected: true", null);
+    try std.testing.expectError(client.HttpError.RequestSplittingAttempt, result);
+}
+
+test "Reject LF in path" {
+    var client = client.HttpClient.init(std.testing.allocator);
+    const result = (&client).sendRequest(.GET, "host", "/path\nInjected: true", null);
+    try std.testing.expectError(client.HttpError.RequestSplittingAttempt, result);
+}
+
+test "Reject CR in header name" {
+    var client = client.HttpClient.init(std.testing.allocator);
+    var headers = std.StringHashMap([]const u8).init(std.testing.allocator);
+    defer headers.deinit();
+    try headers.put("Header\r\nInjected: true", "value");
+    const result = (&client).sendRequest(.GET, "host", "/path", headers);
+    try std.testing.expectError(client.HttpError.RequestSplittingAttempt, result);
+}
+
+test "Reject LF in header name" {
+    var client = client.HttpClient.init(std.testing.allocator);
+    var headers = std.StringHashMap([]const u8).init(std.testing.allocator);
+    defer headers.deinit();
+    try headers.put("Header\nInjected: true", "value");
+    const result = (&client).sendRequest(.GET, "host", "/path", headers);
+    try std.testing.expectError(client.HttpError.RequestSplittingAttempt, result);
+}
+
+test "Reject CR in header value" {
+    var client = client.HttpClient.init(std.testing.allocator);
+    var headers = std.StringHashMap([]const u8).init(std.testing.allocator);
+    defer headers.deinit();
+    try headers.put("Header", "value\r\nInjected: true");
+    const result = (&client).sendRequest(.GET, "host", "/path", headers);
+    try std.testing.expectError(client.HttpError.RequestSplittingAttempt, result);
+}
+
+test "Reject LF in header value" {
+    var client = client.HttpClient.init(std.testing.allocator);
+    var headers = std.StringHashMap([]const u8).init(std.testing.allocator);
+    defer headers.deinit();
+    try headers.put("Header", "value\nInjected: true");
+    const result = (&client).sendRequest(.GET, "host", "/path", headers);
+    try std.testing.expectError(client.HttpError.RequestSplittingAttempt, result);
+}
