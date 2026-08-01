@@ -16,7 +16,7 @@ test "HttpClient - GET request to httpbin.org/get" {
     try headers.put("User-Agent", "Zig-Test-Client/0.1");
 
     // Make request
-    const response = try http_client.get("httpbin.org", "/get", headers);
+    const response = try http_client.get("httpbin.org", "/get", headers, false);
     defer response.deinit();
 
     // Verify status code
@@ -37,7 +37,7 @@ test "HttpClient - GET request to httpbin.org/json" {
     var http_client = HttpClient.init(allocator);
 
     // Make request without custom headers
-    const response = try http_client.get("httpbin.org", "/json", null);
+    const response = try http_client.get("httpbin.org", "/json", null, false);
     defer response.deinit();
 
     // Verify status code
@@ -55,7 +55,7 @@ test "HttpClient - Error handling (non-existent path)" {
     var http_client = HttpClient.init(allocator);
 
     // Make request to a path that should return 404
-    const response = try http_client.get("httpbin.org", "/status/404", null);
+    const response = try http_client.get("httpbin.org", "/status/404", null, false);
     defer response.deinit();
 
     // Verify status code
@@ -71,7 +71,7 @@ test "HttpClient - Connection failure to non-existent host" {
     var http_client = HttpClient.init(allocator);
 
     // Try to connect to a non-existent host (should fail)
-    const result = http_client.get("non-existent-domain-that-should-not-resolve.invalid", "/", null);
+    const result = http_client.get("non-existent-domain-that-should-not-resolve.invalid", "/", null, false);
 
     // Verify that the expected error is returned
     try testing.expectError(HttpError.AddressLookupFailure, result);
@@ -86,7 +86,7 @@ test "HttpClient - Invalid response handling" {
     var http_client = HttpClient.init(allocator);
 
     // Try to connect to a non-HTTP server (e.g. HTTPS port without TLS)
-    const result = http_client.get("httpbin.org", "/", null);
+    const result = http_client.get("httpbin.org", "/", null, false);
 
     // This should either fail with connection issues or invalid response
     // We're testing that we don't crash or leak memory
@@ -115,7 +115,7 @@ test "HttpClient - Timeout handling" {
     var http_client = HttpClient.initWithTimeout(allocator, 1); // 1ms timeout
 
     // Connect to a service that will likely take longer than 1ms to respond
-    const result = http_client.get("httpbin.org", "/delay/3", null);
+    const result = http_client.get("httpbin.org", "/delay/3", null, false);
 
     // Note: Since the current implementation doesn't actually use the timeout,
     // this test will pass even if the timeout doesn't work.
@@ -140,7 +140,7 @@ test "HttpClient - Server error responses" {
     var http_client = HttpClient.init(allocator);
 
     // Test 500 error
-    const response = try http_client.get("httpbin.org", "/status/500", null);
+    const response = try http_client.get("httpbin.org", "/status/500", null, false);
     defer response.deinit();
 
     // Verify status code
@@ -156,7 +156,7 @@ test "HttpClient - Large response handling" {
     var http_client = HttpClient.init(allocator);
 
     // Request a 100KB payload instead, as httpbin.org appears to cap at this size
-    const response = try http_client.get("httpbin.org", "/bytes/102400", null);
+    const response = try http_client.get("httpbin.org", "/bytes/102400", null, false);
     defer response.deinit();
 
     // Verify status code
@@ -175,7 +175,7 @@ test "HttpClient - Chunked encoding handling" {
     var http_client = HttpClient.init(allocator);
 
     // httpbin.org/stream/n returns n chunks
-    const response = try http_client.get("httpbin.org", "/stream/5", null);
+    const response = try http_client.get("httpbin.org", "/stream/5", null, false);
     defer response.deinit();
 
     // Verify status code
@@ -202,7 +202,7 @@ test "HttpClient - Handling missing headers" {
     var http_client = HttpClient.init(allocator);
 
     // Make request without custom headers
-    const response = try http_client.get("httpbin.org", "/get", null);
+    const response = try http_client.get("httpbin.org", "/get", null, false);
     defer response.deinit();
 
     // Verify status code
@@ -222,7 +222,7 @@ test "HttpClient - Redirect handling" {
     var http_client = HttpClient.init(allocator);
 
     // Request a redirect (note: current implementation doesn't follow redirects)
-    const response = try http_client.get("httpbin.org", "/redirect/1", null);
+    const response = try http_client.get("httpbin.org", "/redirect/1", null, false);
     defer response.deinit();
 
     // Should get 302 status code since we don't auto-follow redirects
@@ -250,7 +250,7 @@ test "HttpClient - Handling malformed paths" {
     var http_client = HttpClient.init(allocator);
 
     // Try to send a request with a malformed path (no leading slash)
-    const result = http_client.get("httpbin.org", "get", null);
+    const result = http_client.get("httpbin.org", "get", null, false);
 
     // We shouldn't crash, but the server may return an error or redirect
     if (result) |response| {

@@ -77,8 +77,9 @@ pub const HttpClient = struct {
         host: []const u8,
         path: []const u8,
         headers: ?std.StringHashMap([]const u8),
+        use_tls: bool,
     ) !HttpResponse {
-        return self.sendRequest(.GET, host, path, headers);
+        return self.sendRequest(.GET, host, path, headers, use_tls);
     }
 
     /// Send an HTTP request with the specified method to the given host and path
@@ -88,9 +89,9 @@ pub const HttpClient = struct {
         host: []const u8,
         path: []const u8,
         headers: ?std.StringHashMap([]const u8),
+        use_tls: bool,
     ) !HttpResponse {
-        // Default port is 80 for HTTP
-        const port: u16 = 80;
+        const port: u16 = if (use_tls) 443 else 80;
 
         // Connect to the server
         var stream = net.tcpConnectToHost(self.allocator, host, port) catch |err| {
@@ -102,16 +103,30 @@ pub const HttpClient = struct {
         };
         defer stream.close();
 
+        var net_stream: *net.Stream = &stream;
+        if (use_tls) {
+            const tls_config = std.crypto.tls.Config{};
+            var tls_client = try std.crypto.tls.Client.init(
+                self.allocator,
+                &stream,
+                host,
+                tls_config,
+            );
+            errdefer tls_client.deinit();
+            try tls_client.handshake();
+            net_stream = &tls_client.stream;
+        }
+
         // Set timeout if configured
         // Note: Zig 0.13.0 doesn't have the setReadTimeout/setWriteTimeout methods
         // If we need timeouts in the future, we would have to implement them manually
         // using non-blocking IO or other means
 
         // Build and send the request
-        try self.writeRequest(&stream, method, host, path, headers);
+        try self.writeRequest(net_stream, method, host, path, headers);
 
         // Process the response
-        return try self.parseResponse(&stream);
+        return try self.parseResponse(net_stream);
     }
 
     /// Prepare and write the HTTP request to the stream
