@@ -12,13 +12,13 @@ test "HttpClient timeout initialization preserves the configured value" {
 }
 
 test "GET rejects empty path" {
-    var client = client.HttpClient.init(std.testing.allocator);
-    const result = client.get("example.com", "", null);
+    var http_client = client.HttpClient.init(std.testing.allocator);
+    const result = http_client.get("example.com", "", null);
     try std.testing.expectError(client.HttpError.InvalidPath, result);
 }
 
 test "GET rejects path not starting with /" {
-    var client = client.HttpClient.init(std.testing.allocator);
-    const result = client.get("example.com", "no-slash", null);
+    var http_client = client.HttpClient.init(std.testing.allocator);
+    const result = http_client.get("example.com", "no-slash", null);
     try std.testing.expectError(client.HttpError.InvalidPath, result);
 }
