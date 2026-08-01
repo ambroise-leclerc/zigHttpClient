@@ -17,6 +17,7 @@ pub const HttpError = error{
     AddressLookupFailure,
     ProtocolError,
     ChunkedEncodingError,
+    InvalidPath,
 };
 
 /// Supported HTTP methods
@@ -82,6 +83,7 @@ pub const HttpClient = struct {
     }
 
     /// Send an HTTP request with the specified method to the given host and path
+    /// Validates that the path is non-empty and starts with `/` before connecting.
     pub fn sendRequest(
         self: *HttpClient,
         method: HttpMethod,
@@ -89,6 +91,11 @@ pub const HttpClient = struct {
         path: []const u8,
         headers: ?std.StringHashMap([]const u8),
     ) !HttpResponse {
+        // Validate path before opening any network connection
+        if (path.len == 0 or !mem.startsWith(u8, path, "/")) {
+            return HttpError.InvalidPath;
+        }
+
         // Default port is 80 for HTTP
         const port: u16 = 80;
 

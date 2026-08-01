@@ -16,6 +16,7 @@ A lightweight, dependency-free HTTP client implementation in Zig. This library p
 - Proper error handling with detailed error types
 - Timeout support (configurable)
 - Memory-safe implementation using Zig's allocator pattern
+- Path validation: rejects empty paths and paths not starting with `/` before connecting
 
 ## Requirements
 
