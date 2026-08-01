@@ -32,7 +32,7 @@ You can include this library in your Zig project in several ways:
 git submodule add https://github.com/ambroise-leclerc/zigHttpClient.git lib/http-client
 
 # Then in your build.zig:
-exe.addPackagePath("http-client", "lib/http-client/src/http_client.zig");
+exe.addModule("http-client", .{ .root_source_file = b.path("lib/http-client/src/http_client.zig") });
 ```
 
 ### Option 2: Copy Files
