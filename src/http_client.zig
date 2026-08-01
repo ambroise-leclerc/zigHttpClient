@@ -149,7 +149,6 @@ pub const HttpClient = struct {
             var port_buf: [6]u8 = undefined;
             const port_str = std.fmt.bufPrint(&port_buf, "{d}", .{port}) catch unreachable;
             try buffer.appendSlice(port_str);
-            try buffer.appendSlice("/");
             try buffer.appendSlice(path);
         } else {
             try buffer.appendSlice(path);
