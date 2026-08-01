@@ -19,9 +19,9 @@ test "HttpClient returns ConnectionFailed on closed port" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const allocator = arena.allocator();
-    var client = client.HttpClient.init(allocator);
+    var http_client = client.HttpClient.init(allocator);
 
-    const result = client.get("127.0.0.1", "/", null);
+    const result = http_client.get("127.0.0.1", "/", null);
     if (result) |_| {
         try std.testing.expect(false);
     } else |err| {
