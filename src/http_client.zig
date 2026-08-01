@@ -22,7 +22,8 @@ pub const HttpError = error{
 /// Supported HTTP methods
 pub const HttpMethod = enum {
     GET,
-    // Can be extended with: POST, PUT, DELETE, PATCH, HEAD, OPTIONS
+    HEAD,
+    // Can be extended with: POST, PUT, DELETE, PATCH, OPTIONS
 };
 
 /// Response object containing status code, headers and body data
@@ -122,7 +123,7 @@ pub const HttpClient = struct {
         try self.writeRequest(&stream, method, host, path, headers);
 
         // Process the response
-        return try self.parseResponse(&stream);
+        return try self.parseResponse(&stream, method);
     }
 
     /// Serialize an HTTP request into a byte slice
@@ -179,7 +180,7 @@ pub const HttpClient = struct {
     }
 
     /// Parse an HTTP response from the network stream
-    fn parseResponse(self: *HttpClient, stream: *net.Stream) !HttpResponse {
+    fn parseResponse(self: *HttpClient, stream: *net.Stream, method: HttpMethod) !HttpResponse {
         // Read the initial headers
         var header_buffer = std.ArrayList(u8).init(self.allocator);
         defer header_buffer.deinit();
@@ -276,7 +277,9 @@ pub const HttpClient = struct {
         }
 
         // Read the response body
-        if (is_chunked) {
+        if (method == .HEAD) {
+            // HEAD responses MUST NOT contain a body per RFC 7231
+        } else if (is_chunked) {
             try self.readChunkedBody(stream, &body_buffer);
         } else if (content_length) |length| {
             try self.readFixedLengthBody(stream, &body_buffer, length);

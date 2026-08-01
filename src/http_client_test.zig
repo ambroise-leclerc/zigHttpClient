@@ -84,3 +84,16 @@ test "HttpResponse.getHeader returns null for missing header" {
     const value = response.getHeader("X-Missing-Header");
     try std.testing.expectEqual(null, value);
 }
+
+test "HttpMethod.HEAD exists and serializes correctly" {
+    try std.testing.expectEqualStrings("HEAD", @tagName(client.HttpMethod.HEAD));
+}
+
+test "serializeRequest produces correct HEAD request bytes" {
+    const allocator = std.testing.allocator;
+    const result = try client.HttpClient.serializeRequest(allocator, .HEAD, "example.com", "/index.html", null);
+    defer allocator.free(result);
+
+    const expected = "HEAD /index.html HTTP/1.1\r\nHost: example.com\r\nConnection: close\r\n\r\n";
+    try std.testing.expectEqualStrings(expected, result);
+}
