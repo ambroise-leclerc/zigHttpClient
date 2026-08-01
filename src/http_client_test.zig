@@ -85,7 +85,6 @@ test "HttpResponse.getHeader returns null for missing header" {
     try std.testing.expectEqual(null, value);
 }
 
-
 test "HttpClient defaults proxy to null" {
     const http_client = client.HttpClient.init(std.testing.allocator);
     try std.testing.expectEqual(null, http_client.proxy);
