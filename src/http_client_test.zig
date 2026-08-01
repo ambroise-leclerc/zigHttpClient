@@ -22,3 +22,7 @@ test "GET rejects path not starting with /" {
     const result = http_client.get("example.com", "no-slash", null);
     try std.testing.expectError(client.HttpError.InvalidPath, result);
 }
+
+test "GET remains the public HTTP method" {
+    try std.testing.expect(std.meta.hasDecl(client.HttpClient, "get"));
+}
