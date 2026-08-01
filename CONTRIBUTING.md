@@ -17,7 +17,7 @@ zig build
 
 Please ensure your code is formatted before submitting a pull request:
 ```bash
-zig fmt
+zig fmt --check build.zig src
 ```
 
 ## Running Tests
