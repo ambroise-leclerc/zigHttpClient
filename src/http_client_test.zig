@@ -14,3 +14,25 @@ test "HttpClient timeout initialization preserves the configured value" {
 test "GET remains the public HTTP method" {
     try std.testing.expectEqualStrings("GET", @tagName(client.HttpMethod.GET));
 }
+
+test "serializeRequest produces correct GET request bytes" {
+    const allocator = std.testing.allocator;
+    const result = try client.HttpClient.serializeRequest(allocator, .GET, "example.com", "/index.html", null);
+    defer allocator.free(result);
+
+    const expected = "GET /index.html HTTP/1.1\r\nHost: example.com\r\nConnection: close\r\n\r\n";
+    try std.testing.expectEqualStrings(expected, result);
+}
+
+test "serializeRequest includes custom headers" {
+    const allocator = std.testing.allocator;
+    var headers = std.StringHashMap([]const u8).init(allocator);
+    defer headers.deinit();
+    try headers.put("User-Agent", "TestClient/1.0");
+
+    const result = try client.HttpClient.serializeRequest(allocator, .GET, "api.example.com", "/v1/data", headers);
+    defer allocator.free(result);
+
+    const expected = "GET /v1/data HTTP/1.1\r\nHost: api.example.com\r\nUser-Agent: TestClient/1.0\r\nConnection: close\r\n\r\n";
+    try std.testing.expectEqualStrings(expected, result);
+}

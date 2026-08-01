@@ -114,6 +114,42 @@ pub const HttpClient = struct {
         return try self.parseResponse(&stream);
     }
 
+    /// Serialize an HTTP request into a byte slice
+    pub fn serializeRequest(
+        allocator: Allocator,
+        method: HttpMethod,
+        host: []const u8,
+        path: []const u8,
+        headers: ?std.StringHashMap([]const u8),
+    ) ![]u8 {
+        var buffer = std.ArrayList(u8).init(allocator);
+        errdefer buffer.deinit();
+
+        try buffer.appendSlice(@tagName(method));
+        try buffer.appendSlice(" ");
+        try buffer.appendSlice(path);
+        try buffer.appendSlice(" HTTP/1.1\r\n");
+
+        try buffer.appendSlice("Host: ");
+        try buffer.appendSlice(host);
+        try buffer.appendSlice("\r\n");
+
+        if (headers) |user_headers| {
+            var it = user_headers.iterator();
+            while (it.next()) |entry| {
+                try buffer.appendSlice(entry.key_ptr.*);
+                try buffer.appendSlice(": ");
+                try buffer.appendSlice(entry.value_ptr.*);
+                try buffer.appendSlice("\r\n");
+            }
+        }
+
+        try buffer.appendSlice("Connection: close\r\n");
+        try buffer.appendSlice("\r\n");
+
+        return buffer.toOwnedSlice();
+    }
+
     /// Prepare and write the HTTP request to the stream
     fn writeRequest(
         self: *HttpClient,
@@ -123,39 +159,10 @@ pub const HttpClient = struct {
         path: []const u8,
         headers: ?std.StringHashMap([]const u8),
     ) !void {
-        var request_buffer = std.ArrayList(u8).init(self.allocator);
-        defer request_buffer.deinit();
+        const request_bytes = try serializeRequest(self.allocator, method, host, path, headers);
+        defer self.allocator.free(request_bytes);
 
-        // Add request line
-        try request_buffer.appendSlice(@tagName(method));
-        try request_buffer.appendSlice(" ");
-        try request_buffer.appendSlice(path);
-        try request_buffer.appendSlice(" HTTP/1.1\r\n");
-
-        // Add Host header
-        try request_buffer.appendSlice("Host: ");
-        try request_buffer.appendSlice(host);
-        try request_buffer.appendSlice("\r\n");
-
-        // Add user-defined headers
-        if (headers) |user_headers| {
-            var it = user_headers.iterator();
-            while (it.next()) |entry| {
-                try request_buffer.appendSlice(entry.key_ptr.*);
-                try request_buffer.appendSlice(": ");
-                try request_buffer.appendSlice(entry.value_ptr.*);
-                try request_buffer.appendSlice("\r\n");
-            }
-        }
-
-        // Add Connection: close header for HTTP/1.1 to avoid keep-alive
-        try request_buffer.appendSlice("Connection: close\r\n");
-
-        // End headers section
-        try request_buffer.appendSlice("\r\n");
-
-        // Send request
-        _ = stream.write(request_buffer.items) catch {
+        _ = stream.write(request_bytes) catch {
             return HttpError.WriteError;
         };
     }
