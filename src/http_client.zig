@@ -123,7 +123,7 @@ pub const HttpClient = struct {
         headers: ?std.StringHashMap([]const u8),
     ) ![]u8 {
         var buffer = std.ArrayList(u8).init(allocator);
-        errdefer allocator.free(buffer.items);
+        errdefer buffer.deinit();
 
         try buffer.appendSlice(@tagName(method));
         try buffer.appendSlice(" ");
